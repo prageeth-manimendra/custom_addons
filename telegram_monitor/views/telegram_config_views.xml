@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_telegram_config_form" model="ir.ui.view">
+        <field name="name">telegram.config.form</field>
+        <field name="model">telegram.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="bot_token" password="True"/>
+                        <field name="chat_id"/>
+                        <field name="is_active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_telegram_config_tree" model="ir.ui.view">
+        <field name="name">telegram.config.tree</field>
+        <field name="model">telegram.config</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="is_active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_telegram_config" model="ir.actions.act_window">
+        <field name="name">Telegram Configuration</field>
+        <field name="res_model">telegram.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_telegram_root" name="Telegram Monitor" sequence="10"/>
+    <menuitem id="menu_telegram_config" name="Configuration" parent="menu_telegram_root" action="action_telegram_config" sequence="10"/>
+</odoo>
