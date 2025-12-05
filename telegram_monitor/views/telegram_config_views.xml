@@ -6,14 +6,20 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_test_message" string="Send Test Message" type="object" class="btn-primary"/>
+                    <button name="test_connection" string="Test Connection" type="object" class="btn-primary"/>
                 </header>
                 <sheet>
                     <group>
-                        <field name="name"/>
-                        <field name="bot_token" password="True"/>
-                        <field name="chat_id"/>
-                        <field name="is_active"/>
+                        <group>
+                            <field name="name"/>
+                            <field name="bot_token" password="True"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="last_update_id" readonly="1"/>
+                            <field name="total_groups" readonly="1"/>
+                            <field name="total_messages" readonly="1"/>
+                        </group>
                     </group>
                 </sheet>
             </form>
@@ -26,7 +32,9 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                <field name="is_active"/>
+                <field name="active"/>
+                <field name="total_groups"/>
+                <field name="total_messages"/>
             </list>
         </field>
     </record>
