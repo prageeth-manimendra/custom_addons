@@ -1,0 +1,29 @@
+# -*- coding: utf-8 -*-
+from odoo import models, fields, api
+
+class TelegramGroup(models.Model):
+    _name = 'telegram.group'
+    _description = 'Telegram Group'
+    _order = 'name'
+
+    name = fields.Char('Group Name', required=True)
+    chat_id = fields.Char('Chat ID', required=True, index=True)
+    group_type = fields.Selection([
+        ('team', 'Nerosoft Team'),
+        ('client', 'Client Group'),
+        ('other', 'Other')
+    ], string='Group Type', default='other', required=True)
+    is_monitored = fields.Boolean('Monitor This Group', default=True)
+    description = fields.Text('Description')
+    member_ids = fields.One2many('telegram.member', 'group_id', string='Members')
+    message_ids = fields.One2many('telegram.message', 'group_id', string='Messages')
+    member_count = fields.Integer('Member Count', compute='_compute_member_count', store=True)
+    
+    @api.depends('member_ids')
+    def _compute_member_count(self):
+        for group in self:
+            group.member_count = len(group.member_ids)
+    
+    _sql_constraints = [
+        ('chat_id_unique', 'unique(chat_id)', 'This Telegram group is already registered!')
+    ]

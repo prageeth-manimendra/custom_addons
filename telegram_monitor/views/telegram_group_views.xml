@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Group List View -->
+    <record id="view_telegram_group_tree" model="ir.ui.view">
+        <field name="name">telegram.group.tree</field>
+        <field name="model">telegram.group</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="group_type"/>
+                <field name="member_count"/>
+                <field name="is_monitored"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Group Form View -->
+    <record id="view_telegram_group_form" model="ir.ui.view">
+        <field name="name">telegram.group.form</field>
+        <field name="model">telegram.group</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="chat_id"/>
+                            <field name="group_type"/>
+                        </group>
+                        <group>
+                            <field name="is_monitored"/>
+                            <field name="member_count"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description"/>
+                    </group>
+                    <notebook>
+                        <page string="Members">
+                            <field name="member_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="username"/>
+                                    <field name="is_team_member"/>
+                                    <field name="is_active"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Messages">
+                            <field name="message_ids">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="member_id"/>
+                                    <field name="message_text"/>
+                                    <field name="is_from_team"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_telegram_group" model="ir.actions.act_window">
+        <field name="name">Telegram Groups</field>
+        <field name="res_model">telegram.group</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_telegram_groups" name="Groups" parent="menu_telegram_root" action="action_telegram_group" sequence="20"/>
+</odoo>
