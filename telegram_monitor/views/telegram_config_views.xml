@@ -21,10 +21,10 @@
         <field name="name">telegram.config.tree</field>
         <field name="model">telegram.config</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
                 <field name="is_active"/>
-            </tree>
+            </list>
         </field>
     </record>
 
