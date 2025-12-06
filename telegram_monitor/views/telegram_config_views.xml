@@ -18,31 +18,79 @@
                         </h1>
                     </div>
                     <group>
-                        <group>
+                        <group string="Bot Configuration">
                             <field name="bot_token" password="True"/>
-                            <field name="team_source_group_id" options="{'no_create': True}"/>
-                        </group>
-                        <group>
+                            <field name="bot_owner_telegram_id" placeholder="Your Telegram User ID"/>
                             <field name="active"/>
+                        </group>
+                        <group string="Statistics">
                             <field name="last_update_id" readonly="1"/>
                             <field name="total_groups"/>
                             <field name="total_messages"/>
                         </group>
                     </group>
+                    <group string="Team Configuration">
+                        <group>
+                            <field name="team_source_group_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="monitoring_alerts_group_id" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+                    <group string="Security">
+                        <field name="log_unauthorized_attempts"/>
+                    </group>
                     <notebook>
                         <page string="Instructions">
                             <group>
                                 <div class="alert alert-info" role="alert">
-                                    <h4>Setup Instructions:</h4>
+                                    <h4>🎖️ Setup Instructions:</h4>
                                     <ol>
-                                        <li>Enter your bot token from @BotFather</li>
-                                        <li>Click "Test Connection" to verify</li>
-                                        <li>Create or select your "Nerosoft Team" Telegram group</li>
-                                        <li>Set it as the "Team Source Group" above</li>
-                                        <li>Click "Sync Team Members" to import team members</li>
-                                        <li>Anyone in that group will be recognized as team in ALL client groups!</li>
+                                        <li><strong>Bot Token:</strong> Enter your bot token from @BotFather</li>
+                                        <li><strong>Bot Owner ID:</strong> Enter YOUR Telegram User ID (you can always add bot anywhere)</li>
+                                        <li><strong>Test Connection:</strong> Click to verify bot is working</li>
+                                        <li><strong>Team Source Group:</strong> Select your "Nerosoft Team" Telegram group</li>
+                                        <li><strong>Monitoring Alerts Group:</strong> Select group that receives operational alerts</li>
+                                        <li><strong>Sync Team Members:</strong> Click to import all current team members</li>
+                                        <li><strong>Auto-Detection:</strong> Anyone who joins/leaves team source group is automatically registered/deactivated</li>
                                     </ol>
-                                    <p><strong>Note:</strong> Make sure your bot is an admin in all groups and has privacy mode disabled.</p>
+                                    <hr/>
+                                    <h4>🔔 Monitoring Alerts:</h4>
+                                    <ul>
+                                        <li>New group creation notifications</li>
+                                        <li>Setup delay alerts (30 min)</li>
+                                        <li>Setup completion confirmations</li>
+                                        <li>Security breach attempts</li>
+                                    </ul>
+                                    <hr/>
+                                    <h4>🔒 Security:</h4>
+                                    <ul>
+                                        <li>Only YOU (bot owner) and active team members can add bot to groups</li>
+                                        <li>Unauthorized users will see a warning and bot will leave automatically</li>
+                                        <li>All unauthorized attempts are logged for security audit</li>
+                                    </ul>
+                                    <hr/>
+                                    <p><strong>⚠️ Important:</strong> Make sure your bot is an admin in all groups and has privacy mode disabled via @BotFather.</p>
+                                </div>
+                            </group>
+                        </page>
+                        <page string="How to Find Your Telegram ID">
+                            <group>
+                                <div class="alert alert-warning" role="alert">
+                                    <h4>📱 How to Get Your Telegram User ID:</h4>
+                                    <p><strong>Method 1: Use a Bot</strong></p>
+                                    <ol>
+                                        <li>Open Telegram and search for <code>@userinfobot</code></li>
+                                        <li>Start the bot and send any message</li>
+                                        <li>Bot will reply with your User ID</li>
+                                        <li>Copy that ID and paste it in "Bot Owner Telegram ID" field above</li>
+                                    </ol>
+                                    <p><strong>Method 2: Use GetIDs Bot</strong></p>
+                                    <ol>
+                                        <li>Search for <code>@getidsbot</code> in Telegram</li>
+                                        <li>Start the bot</li>
+                                        <li>It will show your ID immediately</li>
+                                    </ol>
                                 </div>
                             </group>
                         </page>

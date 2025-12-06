@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 class TelegramGroup(models.Model):
     _name = 'telegram.group'
@@ -17,6 +18,27 @@ class TelegramGroup(models.Model):
     ], string='Group Type', default='other', required=True)
     is_monitored = fields.Boolean('Monitor This Group', default=True, 
                                    help='Track messages and calculate response times for this group')
+    needs_setup = fields.Boolean('Needs Setup', default=False,
+                                 help='Bot was added but not yet promoted to admin')
+    
+    # Setup tracking fields
+    setup_started_at = fields.Datetime('Setup Started', 
+                                       help='When bot was added to the group')
+    setup_completed_at = fields.Datetime('Setup Completed', 
+                                         help='When bot was granted admin rights')
+    setup_duration = fields.Integer('Setup Duration (minutes)', 
+                                    help='Time taken to complete bot setup')
+    setup_status = fields.Selection([
+        ('pending', 'Pending Setup'),
+        ('delayed', 'Setup Delayed'),
+        ('complete', 'Setup Complete'),
+        ('failed', 'Setup Failed')
+    ], string='Setup Status', default='pending')
+    created_by_telegram_id = fields.Char('Created By (Telegram ID)',
+                                         help='Telegram ID of person who added bot')
+    created_by_name = fields.Char('Created By (Name)',
+                                  help='Name of person who added bot')
+    
     invite_link = fields.Char('Invite Link', readonly=True, help='Telegram invite link for this group')
     invite_link_created_at = fields.Datetime('Invite Link Created', readonly=True)
     description = fields.Text('Description')
