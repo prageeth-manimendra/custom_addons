@@ -7,10 +7,11 @@ class TelegramMember(models.Model):
     _order = 'name'
 
     name = fields.Char('Name', required=True)
-    user_id = fields.Char('Telegram User ID', required=True, index=True)
+    telegram_id = fields.Char('Telegram User ID', required=True, index=True)
     username = fields.Char('Username')
     group_id = fields.Many2one('telegram.group', string='Group', required=True, ondelete='cascade', index=True)
     is_team_member = fields.Boolean('Nerosoft Team Member', default=False)
+    is_bot = fields.Boolean('Is Bot', default=False)
     join_date = fields.Datetime('Joined Date', default=fields.Datetime.now)
     left_date = fields.Datetime('Left Date')
     is_active = fields.Boolean('Active in Group', default=True)
@@ -19,7 +20,7 @@ class TelegramMember(models.Model):
     notes = fields.Text('Notes')
     
     _sql_constraints = [
-        ('user_group_unique', 'unique(user_id, group_id)', 'This user is already in this group!')
+        ('telegram_id_group_unique', 'unique(telegram_id, group_id)', 'This user is already in this group!')
     ]
     
     def name_get(self):

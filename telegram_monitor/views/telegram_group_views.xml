@@ -9,6 +9,7 @@
                 <field name="name"/>
                 <field name="group_type"/>
                 <field name="member_count"/>
+                <field name="message_count"/>
                 <field name="is_monitored"/>
             </list>
         </field>
@@ -25,11 +26,13 @@
                         <group>
                             <field name="name"/>
                             <field name="chat_id"/>
+                            <field name="chat_type"/>
                             <field name="group_type"/>
                         </group>
                         <group>
                             <field name="is_monitored"/>
                             <field name="member_count"/>
+                            <field name="message_count"/>
                         </group>
                     </group>
                     <group>
@@ -49,7 +52,7 @@
                         <page string="Messages">
                             <field name="message_ids">
                                 <list>
-                                    <field name="date"/>
+                                    <field name="message_date"/>
                                     <field name="member_id"/>
                                     <field name="message_text"/>
                                     <field name="is_from_team"/>

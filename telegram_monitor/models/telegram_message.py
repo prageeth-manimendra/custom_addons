@@ -4,13 +4,14 @@ from odoo import models, fields, api
 class TelegramMessage(models.Model):
     _name = 'telegram.message'
     _description = 'Telegram Message'
-    _order = 'date desc'
+    _order = 'message_date desc'
 
     group_id = fields.Many2one('telegram.group', string='Group', required=True, ondelete='cascade', index=True)
     member_id = fields.Many2one('telegram.member', string='Sender', ondelete='set null', index=True)
     message_text = fields.Text('Message', required=True)
     message_id = fields.Char('Telegram Message ID', required=True, index=True)
-    date = fields.Datetime('Date', default=fields.Datetime.now, required=True, index=True)
+    message_date = fields.Datetime('Date', default=fields.Datetime.now, required=True, index=True)
+    is_reply = fields.Boolean('Is Reply', default=False)
     is_from_team = fields.Boolean('From Team Member', compute='_compute_is_from_team', store=True)
     needs_response = fields.Boolean('Needs Response', default=False)
     ai_classification = fields.Selection([
