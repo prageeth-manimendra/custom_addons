@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Configuration Form View -->
     <record id="view_telegram_config_form" model="ir.ui.view">
         <field name="name">telegram.config.form</field>
         <field name="model">telegram.config</field>
@@ -7,44 +8,73 @@
             <form>
                 <header>
                     <button name="test_connection" string="Test Connection" type="object" class="btn-primary"/>
+                    <button name="action_sync_team_members" string="Sync Team Members" type="object" 
+                            class="btn-success" invisible="not team_source_group_id"/>
                 </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g., Nero Bot"/>
+                        </h1>
+                    </div>
                     <group>
                         <group>
-                            <field name="name"/>
                             <field name="bot_token" password="True"/>
-                            <field name="active"/>
+                            <field name="team_source_group_id" options="{'no_create': True}"/>
                         </group>
                         <group>
+                            <field name="active"/>
                             <field name="last_update_id" readonly="1"/>
-                            <field name="total_groups" readonly="1"/>
-                            <field name="total_messages" readonly="1"/>
+                            <field name="total_groups"/>
+                            <field name="total_messages"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page string="Instructions">
+                            <group>
+                                <div class="alert alert-info" role="alert">
+                                    <h4>Setup Instructions:</h4>
+                                    <ol>
+                                        <li>Enter your bot token from @BotFather</li>
+                                        <li>Click "Test Connection" to verify</li>
+                                        <li>Create or select your "Nerosoft Team" Telegram group</li>
+                                        <li>Set it as the "Team Source Group" above</li>
+                                        <li>Click "Sync Team Members" to import team members</li>
+                                        <li>Anyone in that group will be recognized as team in ALL client groups!</li>
+                                    </ol>
+                                    <p><strong>Note:</strong> Make sure your bot is an admin in all groups and has privacy mode disabled.</p>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
+    <!-- Configuration List View -->
     <record id="view_telegram_config_tree" model="ir.ui.view">
         <field name="name">telegram.config.tree</field>
         <field name="model">telegram.config</field>
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                <field name="active"/>
+                <field name="team_source_group_id"/>
                 <field name="total_groups"/>
                 <field name="total_messages"/>
+                <field name="active"/>
             </list>
         </field>
     </record>
 
+    <!-- Action -->
     <record id="action_telegram_config" model="ir.actions.act_window">
         <field name="name">Telegram Configuration</field>
         <field name="res_model">telegram.config</field>
         <field name="view_mode">list,form</field>
     </record>
 
+    <!-- Menu -->
     <menuitem id="menu_telegram_root" name="Telegram Monitor" sequence="10"/>
-    <menuitem id="menu_telegram_config" name="Configuration" parent="menu_telegram_root" action="action_telegram_config" sequence="10"/>
+    <menuitem id="menu_telegram_configuration" name="Configuration" parent="menu_telegram_root" action="action_telegram_config" sequence="10"/>
 </odoo>

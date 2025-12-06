@@ -9,6 +9,7 @@
                 <field name="name"/>
                 <field name="group_type"/>
                 <field name="member_count"/>
+                <field name="team_member_count"/>
                 <field name="message_count"/>
                 <field name="is_monitored"/>
             </list>
@@ -21,7 +22,21 @@
         <field name="model">telegram.group</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_copy_invite_link" string="📎 Copy Invite Link" type="object" 
+                            class="btn-primary" invisible="not invite_link"/>
+                    <button name="action_regenerate_invite_link" string="🔄 Regenerate Link" type="object" 
+                            class="btn-secondary"/>
+                </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_copy_invite_link" icon="fa-link"
+                                invisible="not invite_link">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Invite Link</span>
+                            </div>
+                        </button>
+                    </div>
                     <group>
                         <group>
                             <field name="name"/>
@@ -32,8 +47,13 @@
                         <group>
                             <field name="is_monitored"/>
                             <field name="member_count"/>
+                            <field name="team_member_count"/>
                             <field name="message_count"/>
                         </group>
+                    </group>
+                    <group string="Invite Link" invisible="not invite_link">
+                        <field name="invite_link" widget="url"/>
+                        <field name="invite_link_created_at"/>
                     </group>
                     <group>
                         <field name="description"/>
@@ -44,8 +64,12 @@
                                 <list>
                                     <field name="name"/>
                                     <field name="username"/>
-                                    <field name="is_team_member"/>
+                                    <field name="telegram_id"/>
+                                    <field name="is_team_member" string="Team"/>
+                                    <field name="is_bot"/>
                                     <field name="is_active"/>
+                                    <field name="join_date"/>
+                                    <field name="left_date"/>
                                 </list>
                             </field>
                         </page>
@@ -55,7 +79,7 @@
                                     <field name="message_date"/>
                                     <field name="member_id"/>
                                     <field name="message_text"/>
-                                    <field name="is_from_team"/>
+                                    <field name="is_from_team" string="Team"/>
                                 </list>
                             </field>
                         </page>

@@ -26,6 +26,7 @@
         'security/ir.model.access.csv',
         'data/telegram_cron.xml',
         'views/telegram_config_views.xml',
+        'views/telegram_team_member_views.xml',
         'views/telegram_group_views.xml',
     ],
     'external_dependencies': {

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Team Member List View -->
+    <record id="view_telegram_team_member_tree" model="ir.ui.view">
+        <field name="name">telegram.team.member.tree</field>
+        <field name="model">telegram.team.member</field>
+        <field name="arch" type="xml">
+            <list create="false" delete="false">
+                <field name="name"/>
+                <field name="username"/>
+                <field name="telegram_id"/>
+                <field name="role"/>
+                <field name="is_active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Team Member Form View -->
+    <record id="view_telegram_team_member_form" model="ir.ui.view">
+        <field name="name">telegram.team.member.form</field>
+        <field name="model">telegram.team.member</field>
+        <field name="arch" type="xml">
+            <form create="false" delete="false">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Auto-Synced:</strong> This member is automatically synced from the Team Source Group. 
+                        To add/remove team members, update the Telegram group and click "Sync Team Members" in Configuration.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="telegram_id" readonly="1"/>
+                            <field name="username" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="role"/>
+                            <field name="is_active" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_telegram_team_member" model="ir.actions.act_window">
+        <field name="name">Team Members</field>
+        <field name="res_model">telegram.team.member</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No team members found
+            </p>
+            <p>
+                Team members are automatically synced from your Team Source Group.<br/>
+                Go to Configuration and click "Sync Team Members" to import.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_telegram_team_members" name="Team Members" parent="menu_telegram_root" action="action_telegram_team_member" sequence="15"/>
+</odoo>

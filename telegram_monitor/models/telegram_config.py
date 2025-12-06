@@ -15,6 +15,8 @@ class TelegramConfig(models.Model):
 
     name = fields.Char(string='Configuration Name', required=True)
     bot_token = fields.Char(string='Bot Token', required=True, help='Your Telegram Bot Token from @BotFather')
+    team_source_group_id = fields.Many2one('telegram.group', string='Team Source Group',
+                                           help='The Telegram group that contains all Nerosoft team members. Anyone in this group will be recognized as team in all client groups.')
     active = fields.Boolean(string='Active', default=True)
     last_update_id = fields.Integer(string='Last Update ID', default=0, help='Used for polling to avoid duplicate messages')
     
@@ -78,6 +80,28 @@ class TelegramConfig(models.Model):
             _logger.error(f"Error sending Telegram message: {str(e)}")
             raise UserError(_("Failed to send Telegram message: %s") % str(e))
     
+    def _generate_invite_link(self, chat_id):
+        """Generate invite link for a group"""
+        self.ensure_one()
+        url = f"https://api.telegram.org/bot{self.bot_token}/exportChatInviteLink"
+        
+        payload = {'chat_id': chat_id}
+        
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            if data.get('ok'):
+                return data.get('result')
+            else:
+                _logger.error(f"Failed to generate invite link: {data}")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            _logger.error(f"Error generating invite link: {str(e)}")
+            return None
+    
     @api.model
     def poll_telegram_messages(self):
         """Poll for new messages from Telegram (called by scheduled action)"""
@@ -94,7 +118,7 @@ class TelegramConfig(models.Model):
         params = {
             'offset': self.last_update_id + 1 if self.last_update_id else None,
             'timeout': 25,
-            'allowed_updates': ['message', 'channel_post']
+            'allowed_updates': ['message', 'channel_post', 'my_chat_member', 'chat_member']
         }
         
         try:
@@ -121,10 +145,28 @@ class TelegramConfig(models.Model):
                 if update.get('update_id', 0) > (self.last_update_id or 0):
                     self.last_update_id = update['update_id']
                 
+                # Handle bot being added to group
+                if update.get('my_chat_member'):
+                    self._handle_bot_status_change(update['my_chat_member'])
+                    continue
+                
+                # Handle member status changes (joins/leaves)
+                if update.get('chat_member'):
+                    self._handle_member_status_change(update['chat_member'])
+                    continue
+                
                 # Get message data
                 message_data = update.get('message') or update.get('channel_post')
                 if not message_data:
                     continue
+                
+                # Handle new members joining
+                if message_data.get('new_chat_members'):
+                    self._handle_new_members(message_data)
+                
+                # Handle member leaving
+                if message_data.get('left_chat_member'):
+                    self._handle_member_left(message_data)
                 
                 # Extract chat and user information
                 chat_data = message_data.get('chat', {})
@@ -149,6 +191,163 @@ class TelegramConfig(models.Model):
             except Exception as e:
                 _logger.error(f"Error processing update {update.get('update_id')}: {str(e)}")
                 continue
+    
+    def _handle_bot_status_change(self, chat_member_data):
+        """Handle bot being added/removed from group"""
+        chat_data = chat_member_data.get('chat', {})
+        new_status = chat_member_data.get('new_chat_member', {}).get('status')
+        
+        # Bot was added to group
+        if new_status in ['member', 'administrator']:
+            group = self._find_or_create_group(chat_data)
+            if group:
+                # Generate invite link
+                invite_link = self._generate_invite_link(group.chat_id)
+                if invite_link:
+                    group.write({'invite_link': invite_link})
+                    
+                    # Send welcome message with invite link
+                    welcome_msg = f"""🤖 <b>Bot Activated for {group.name}!</b>
+
+📎 <b>Invite Link:</b>
+{invite_link}
+
+Share this link to add members to this group.
+I'll automatically track team members vs clients! 📊"""
+                    
+                    self.send_telegram_message(group.chat_id, welcome_msg)
+                    _logger.info(f"✅ Bot added to group {group.name}, invite link generated")
+    
+    def _handle_member_status_change(self, chat_member_data):
+        """Handle member status changes (chat_member update)"""
+        chat_data = chat_member_data.get('chat', {})
+        user_data = chat_member_data.get('new_chat_member', {}).get('user', {})
+        new_status = chat_member_data.get('new_chat_member', {}).get('status')
+        old_status = chat_member_data.get('old_chat_member', {}).get('status')
+        
+        group = self._find_or_create_group(chat_data)
+        if not group:
+            return
+        
+        telegram_id = str(user_data.get('id'))
+        
+        # Member joined
+        if old_status in ['left', 'kicked'] and new_status in ['member', 'administrator', 'creator']:
+            self._process_member_join(user_data, group)
+        
+        # Member left or was removed
+        elif old_status in ['member', 'administrator'] and new_status in ['left', 'kicked', 'restricted']:
+            self._process_member_leave(telegram_id, group)
+    
+    def _handle_new_members(self, message_data):
+        """Handle new_chat_members in message"""
+        chat_data = message_data.get('chat', {})
+        new_members = message_data.get('new_chat_members', [])
+        
+        group = self._find_or_create_group(chat_data)
+        if not group:
+            return
+        
+        for user_data in new_members:
+            self._process_member_join(user_data, group)
+    
+    def _handle_member_left(self, message_data):
+        """Handle left_chat_member in message"""
+        chat_data = message_data.get('chat', {})
+        user_data = message_data.get('left_chat_member', {})
+        
+        group = self._find_or_create_group(chat_data)
+        if not group:
+            return
+        
+        telegram_id = str(user_data.get('id'))
+        self._process_member_leave(telegram_id, group)
+    
+    def _process_member_join(self, user_data, group):
+        """Process a member joining a group"""
+        telegram_id = str(user_data.get('id'))
+        username = user_data.get('username', '')
+        first_name = user_data.get('first_name', '')
+        last_name = user_data.get('last_name', '')
+        display_name = ' '.join(filter(None, [first_name, last_name])) or username or 'Unknown'
+        
+        # Find or create member in this group
+        member = self.env['telegram.member'].search([
+            ('telegram_id', '=', telegram_id),
+            ('group_id', '=', group.id)
+        ], limit=1)
+        
+        if member:
+            member.write({'is_active': True, 'left_date': False})
+            _logger.info(f"✅ {display_name} re-joined {group.name}")
+        else:
+            member = self.env['telegram.member'].create({
+                'name': display_name,
+                'telegram_id': telegram_id,
+                'username': username,
+                'group_id': group.id,
+                'is_bot': user_data.get('is_bot', False),
+            })
+            _logger.info(f"✅ New member {display_name} joined {group.name}")
+        
+        # If this is the team source group, register as team member
+        if self.team_source_group_id and group.id == self.team_source_group_id.id:
+            self._register_team_member(user_data)
+    
+    def _process_member_leave(self, telegram_id, group):
+        """Process a member leaving a group"""
+        member = self.env['telegram.member'].search([
+            ('telegram_id', '=', telegram_id),
+            ('group_id', '=', group.id)
+        ], limit=1)
+        
+        if member:
+            member.write({
+                'is_active': False,
+                'left_date': fields.Datetime.now()
+            })
+            _logger.info(f"👋 {member.name} left {group.name}")
+            
+            # If this is the team source group, deactivate team member
+            if self.team_source_group_id and group.id == self.team_source_group_id.id:
+                self._deactivate_team_member(telegram_id)
+    
+    def _register_team_member(self, user_data):
+        """Register a user as a team member"""
+        telegram_id = str(user_data.get('id'))
+        username = user_data.get('username', '')
+        first_name = user_data.get('first_name', '')
+        last_name = user_data.get('last_name', '')
+        display_name = ' '.join(filter(None, [first_name, last_name])) or username or 'Unknown'
+        
+        # Check if already exists
+        team_member = self.env['telegram.team.member'].search([
+            ('telegram_id', '=', telegram_id)
+        ], limit=1)
+        
+        if team_member:
+            team_member.write({'is_active': True})
+            _logger.info(f"🔄 Reactivated team member: {display_name}")
+        else:
+            self.env['telegram.team.member'].create({
+                'name': display_name,
+                'telegram_id': telegram_id,
+                'username': username,
+            })
+            _logger.info(f"✅ Registered NEW team member: {display_name}")
+    
+    def _deactivate_team_member(self, telegram_id):
+        """Deactivate a team member"""
+        team_member = self.env['telegram.team.member'].search([
+            ('telegram_id', '=', telegram_id)
+        ], limit=1)
+        
+        if team_member:
+            team_member.write({'is_active': False})
+            _logger.info(f"⚠️ Deactivated team member: {team_member.name}")
+            
+            # TODO Phase 2: Check if member is still in other client groups
+            # and send alert to steering committee
     
     def _find_or_create_group(self, chat_data):
         """Find or create a Telegram group"""
@@ -227,3 +426,49 @@ class TelegramConfig(models.Model):
         
         _logger.info(f"✅ Stored message {message_id} from {member.name if member else 'Unknown'} in {group.name}")
         return message
+    
+    def action_sync_team_members(self):
+        """Manually sync team members from the team source group"""
+        self.ensure_one()
+        if not self.team_source_group_id:
+            raise UserError(_('Please select a Team Source Group first'))
+        
+        team_group = self.team_source_group_id
+        team_members = team_group.member_ids.filtered('is_active')
+        
+        # Get all unique telegram IDs from team group
+        team_telegram_ids = team_members.mapped('telegram_id')
+        
+        # Update existing team member records
+        synced_count = 0
+        for member in team_members:
+            existing = self.env['telegram.team.member'].search([
+                ('telegram_id', '=', member.telegram_id)
+            ])
+            if existing:
+                existing.write({'is_active': True})
+            else:
+                self.env['telegram.team.member'].create({
+                    'name': member.name,
+                    'telegram_id': member.telegram_id,
+                    'username': member.username,
+                })
+            synced_count += 1
+        
+        # Deactivate team members no longer in the group
+        all_team_ids = self.env['telegram.team.member'].search([]).mapped('telegram_id')
+        removed_ids = list(set(all_team_ids) - set(team_telegram_ids))
+        if removed_ids:
+            self.env['telegram.team.member'].search([
+                ('telegram_id', 'in', removed_ids)
+            ]).write({'is_active': False})
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Team Members Synced'),
+                'message': _('Successfully synced %d team members from %s') % (synced_count, team_group.name),
+                'type': 'success',
+            }
+        }
