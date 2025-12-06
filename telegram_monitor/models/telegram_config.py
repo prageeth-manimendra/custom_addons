@@ -489,8 +489,20 @@ If you believe this is an error, please contact your administrator."""
     
     def _log_unauthorized_attempt(self, telegram_id, user_name, chat_data):
         """Log unauthorized bot addition attempt for security audit"""
-        # TODO Phase 2: Create security_audit model to track unauthorized access attempts
-        # Alert Tier 1 Response Group if repeat offender detected
+        self.ensure_one()
+        
+        # Create security audit record
+        self.env['telegram.security.audit'].create({
+            'name': user_name,
+            'telegram_id': telegram_id,
+            'telegram_username': chat_data.get('username', ''),
+            'group_name': chat_data.get('title', 'Unknown Group'),
+            'group_chat_id': str(chat_data.get('id', '')),
+            'config_id': self.id,
+            'attempt_type': 'unauthorized_add',
+            'notes': f"User {user_name} (ID: {telegram_id}) attempted to add bot to group '{chat_data.get('title')}' without authorization. Bot automatically left the group."
+        })
+        
         _logger.warning(f"🔐 SECURITY AUDIT: Unauthorized attempt by {user_name} ({telegram_id}) to add bot to {chat_data.get('title')}")
     
     def _leave_group(self, chat_id):
