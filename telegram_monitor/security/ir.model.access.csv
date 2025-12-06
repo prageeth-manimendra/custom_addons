@@ -1,6 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_telegram_config,access_telegram_config,model_telegram_config,base.group_user,1,1,1,1
+access_telegram_team_member,access_telegram_team_member,model_telegram_team_member,base.group_user,1,1,1,1
 access_telegram_group,access_telegram_group,model_telegram_group,base.group_user,1,1,1,1
 access_telegram_member,access_telegram_member,model_telegram_member,base.group_user,1,1,1,1
 access_telegram_message,access_telegram_message,model_telegram_message,base.group_user,1,1,1,1
-access_telegram_team_member,access_telegram_team_member,model_telegram_team_member,base.group_user,1,1,1,1
+access_telegram_security_audit,access_telegram_security_audit,model_telegram_security_audit,base.group_user,1,0,0,0

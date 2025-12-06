@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Security Audit Tree View -->
+    <record id="view_telegram_security_audit_tree" model="ir.ui.view">
+        <field name="name">telegram.security.audit.tree</field>
+        <field name="model">telegram.security.audit</field>
+        <field name="arch" type="xml">
+            <list string="Security Audit Logs" default_order="attempt_date desc">
+                <field name="attempt_date"/>
+                <field name="name"/>
+                <field name="telegram_id"/>
+                <field name="telegram_username"/>
+                <field name="group_name"/>
+                <field name="attempt_type"/>
+                <field name="config_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Security Audit Form View -->
+    <record id="view_telegram_security_audit_form" model="ir.ui.view">
+        <field name="name">telegram.security.audit.form</field>
+        <field name="model">telegram.security.audit</field>
+        <field name="arch" type="xml">
+            <form string="Security Audit Log" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="User Information">
+                            <field name="telegram_id" readonly="1"/>
+                            <field name="telegram_username" readonly="1"/>
+                            <field name="attempt_date" readonly="1"/>
+                        </group>
+                        <group string="Group Information">
+                            <field name="group_name" readonly="1"/>
+                            <field name="group_chat_id" readonly="1"/>
+                            <field name="config_id" readonly="1"/>
+                            <field name="attempt_type" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Details">
+                        <field name="notes" readonly="1" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Security Audit Search View -->
+    <record id="view_telegram_security_audit_search" model="ir.ui.view">
+        <field name="name">telegram.security.audit.search</field>
+        <field name="model">telegram.security.audit</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="telegram_id"/>
+                <field name="telegram_username"/>
+                <field name="group_name"/>
+                <filter string="Last 7 Days" name="last_week" 
+                        domain="[('attempt_date','&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Last 30 Days" name="last_month" 
+                        domain="[('attempt_date','&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Group by User" name="group_user" context="{'group_by':'name'}"/>
+                <filter string="Group by Type" name="group_type" context="{'group_by':'attempt_type'}"/>
+                <filter string="Group by Date" name="group_date" context="{'group_by':'attempt_date'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_telegram_security_audit" model="ir.actions.act_window">
+        <field name="name">Security Audit</field>
+        <field name="res_model">telegram.security.audit</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_last_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No unauthorized access attempts logged
+            </p>
+            <p>
+                All unauthorized attempts to add the bot to groups will appear here.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_telegram_security_audit" 
+              name="Security Audit" 
+              parent="menu_telegram_root" 
+              action="action_telegram_security_audit" 
+              sequence="40"/>
+</odoo>
